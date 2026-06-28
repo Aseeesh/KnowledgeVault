@@ -1,0 +1,279 @@
+services:
+  # ─── .NET 9 REST API ──────────────────────────────────────────
+  api:
+    build:
+      context: ./api
+      dockerfile: ../infrastructure/docker/Dockerfile.api
+      target: development
+    container_name: kv-api
+    ports:
+      - "5001:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__PostgreSQL=Host=postgres;Port=5432;Database=knowledgevault;Username=kv_user;Password=${POSTGRES_PASSWORD:-KvDev2024!}
+      - Redis__ConnectionString=redis:6379,password=${REDIS_PASSWORD:-KvRedis2024!}
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=${RABBITMQ_USER:-kv_user}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD:-KvRabbit2024!}
+      - Qdrant__Host=qdrant
+      - Qdrant__Port=6334
+      - AIEngine__BaseUrl=http://ai-engine:8000
+    volumes:
+      - ./api/src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    networks:
+      - backend
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ─── Python AI Engine ─────────────────────────────────────────
+  ai-engine:
+    build:
+      context: ./ai-engine
+      dockerfile: ../infrastructure/docker/Dockerfile.ai
+      target: development
+    container_name: kv-ai-engine
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - QDRANT_HOST=qdrant
+      - QDRANT_GRPC_PORT=6334
+      - QDRANT_HTTP_PORT=6333
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-KvRedis2024!}@redis:6379/1
+      - POSTGRES_DSN=postgresql+asyncpg://kv_user:${POSTGRES_PASSWORD:-KvDev2024!}@postgres:5432/knowledgevault
+      - LOG_LEVEL=DEBUG
+      - EMBEDDING_MODEL=nomic-embed-text
+      - LLM_MODEL=llama3.2:1b
+    volumes:
+      - ./ai-engine/app:/app/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ─── Qdrant Vector Database ───────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    container_name: kv-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo -e \"GET /healthz HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" > /dev/tcp/localhost/6333'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─── PostgreSQL 16 ────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: kv-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=knowledgevault
+      - POSTGRES_USER=kv_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-KvDev2024!}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kv_user -d knowledgevault"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ─── Redis 7 ──────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: kv-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-KvRedis2024!} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: "0.25"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-KvRedis2024!}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ─── RabbitMQ ─────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: kv-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-kv_user}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-KvRabbit2024!}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ─── Ollama LLM Runtime ───────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: kv-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: "4.0"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ─── React Web Client ────────────────────────────────────────
+  web-client:
+    build:
+      context: ./web-client
+      dockerfile: ../infrastructure/docker/Dockerfile.web
+      target: development
+    container_name: kv-web-client
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web-client/src:/app/src
+      - ./web-client/public:/app/public
+      - ./web-client/index.html:/app/index.html
+    environment:
+      - VITE_API_BASE_URL=http://localhost:80
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    restart: unless-stopped
+
+  # ─── Nginx Gateway ───────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: kv-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  qdrant_data:
+  ollama_data:
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge

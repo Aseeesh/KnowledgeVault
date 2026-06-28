@@ -1,0 +1,141 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options: [dev, prod]
+
+env:
+  ACR_NAME: ${{ secrets.ACR_NAME }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=$(echo $GITHUB_SHA | head -c 7)" >> "$GITHUB_OUTPUT"
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: az acr login --name $ACR_NAME
+
+      - name: Build and push API
+        run: |
+          docker build -f infrastructure/docker/Dockerfile.api --target production -t $ACR_NAME.azurecr.io/kv-api:${{ steps.meta.outputs.tag }} ./api
+          docker push $ACR_NAME.azurecr.io/kv-api:${{ steps.meta.outputs.tag }}
+
+      - name: Build and push AI Engine
+        run: |
+          docker build -f infrastructure/docker/Dockerfile.ai --target production -t $ACR_NAME.azurecr.io/kv-ai:${{ steps.meta.outputs.tag }} ./ai-engine
+          docker push $ACR_NAME.azurecr.io/kv-ai:${{ steps.meta.outputs.tag }}
+
+      - name: Build and push Web Client
+        run: |
+          docker build -f infrastructure/docker/Dockerfile.web --target production -t $ACR_NAME.azurecr.io/kv-web:${{ steps.meta.outputs.tag }} ./web-client
+          docker push $ACR_NAME.azurecr.io/kv-web:${{ steps.meta.outputs.tag }}
+
+  deploy-infrastructure:
+    name: Deploy Infrastructure
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform
+        run: terraform init
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_USE_OIDC: true
+
+      - name: Terraform Plan
+        working-directory: infrastructure/terraform
+        run: terraform plan -var-file=environments/${{ github.event.inputs.environment || 'dev' }}/terraform.tfvars -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="db_admin_password=${{ secrets.DB_ADMIN_PASSWORD }}" -out=tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_USE_OIDC: true
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        working-directory: infrastructure/terraform
+        run: terraform apply -auto-approve tfplan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_USE_OIDC: true
+
+  deploy-apps:
+    name: Deploy Applications
+    needs: [build-and-push, deploy-infrastructure]
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy API
+        run: |
+          ENV=${{ github.event.inputs.environment || 'dev' }}
+          az webapp config container set \
+            --name kv-${ENV}-api \
+            --resource-group kv-${ENV}-rg \
+            --container-image-name $ACR_NAME.azurecr.io/kv-api:${{ needs.build-and-push.outputs.image_tag }}
+
+      - name: Deploy AI Engine
+        run: |
+          ENV=${{ github.event.inputs.environment || 'dev' }}
+          az webapp config container set \
+            --name kv-${ENV}-ai \
+            --resource-group kv-${ENV}-rg \
+            --container-image-name $ACR_NAME.azurecr.io/kv-ai:${{ needs.build-and-push.outputs.image_tag }}
+
+      - name: Verify deployment
+        run: |
+          ENV=${{ github.event.inputs.environment || 'dev' }}
+          echo "Waiting for deployment..."
+          sleep 30
+          API_URL=$(az webapp show --name kv-${ENV}-api --resource-group kv-${ENV}-rg --query defaultHostName -o tsv)
+          curl -sf "https://${API_URL}/health" || (echo "API health check failed" && exit 1)
+          echo "Deployment verified: https://${API_URL}"

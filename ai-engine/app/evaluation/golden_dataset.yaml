@@ -1,0 +1,28 @@
+version: v1
+description: Golden answer dataset for RAG evaluation
+
+cases:
+  - query: "What is Retrieval-Augmented Generation?"
+    expected_answer: "RAG is a technique that combines information retrieval with text generation to produce grounded, factual responses."
+    expected_citations: [0]
+    tags: [core, definition]
+
+  - query: "How does BM25 work?"
+    expected_answer: "BM25 is a probabilistic ranking function that scores documents based on term frequency and inverse document frequency."
+    expected_citations: [2]
+    tags: [search, algorithm]
+
+  - query: "What is Reciprocal Rank Fusion?"
+    expected_answer: "RRF combines rankings from multiple retrieval systems by summing 1/(k+rank) scores across all rankers."
+    expected_citations: [3]
+    tags: [search, fusion]
+
+  - query: "How does citation verification work?"
+    expected_answer: "Citation verification checks whether generated answers are supported by the retrieved source documents."
+    expected_citations: [4]
+    tags: [citation, verification]
+
+  - query: "What are vector databases used for?"
+    expected_answer: "Vector databases store embeddings and use approximate nearest neighbor algorithms to find similar vectors in high-dimensional space."
+    expected_citations: [1]
+    tags: [database, embedding]

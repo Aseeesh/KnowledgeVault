@@ -1,0 +1,534 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/tests/KnowledgeVault.Tests/KnowledgeVault.Tests.csproj": {}
+  },
+  "projects": {
+    "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.API/KnowledgeVault.API.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.API/KnowledgeVault.API.csproj",
+        "projectName": "KnowledgeVault.API",
+        "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.API/KnowledgeVault.API.csproj",
+        "packagesPath": "/Users/ashishrijal/.nuget/packages/",
+        "outputPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.API/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/ashishrijal/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj"
+              },
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj"
+              },
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/KnowledgeVault.Infrastructure.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/KnowledgeVault.Infrastructure.csproj"
+              },
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Ingestion/KnowledgeVault.Ingestion.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Ingestion/KnowledgeVault.Ingestion.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Asp.Versioning.Mvc": {
+              "target": "Package",
+              "version": "[8.1.0, )"
+            },
+            "Asp.Versioning.Mvc.ApiExplorer": {
+              "target": "Package",
+              "version": "[8.1.0, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[7.2.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj",
+        "projectName": "KnowledgeVault.Application",
+        "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj",
+        "packagesPath": "/Users/ashishrijal/.nuget/packages/",
+        "outputPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/ashishrijal/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.11.0, )"
+            },
+            "FluentValidation.DependencyInjectionExtensions": {
+              "target": "Package",
+              "version": "[11.11.0, )"
+            },
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.4.1, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj",
+        "projectName": "KnowledgeVault.Core",
+        "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj",
+        "packagesPath": "/Users/ashishrijal/.nuget/packages/",
+        "outputPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/ashishrijal/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "MediatR.Contracts": {
+              "target": "Package",
+              "version": "[2.0.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/KnowledgeVault.Infrastructure.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/KnowledgeVault.Infrastructure.csproj",
+        "projectName": "KnowledgeVault.Infrastructure",
+        "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/KnowledgeVault.Infrastructure.csproj",
+        "packagesPath": "/Users/ashishrijal/.nuget/packages/",
+        "outputPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/ashishrijal/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj"
+              },
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Dapper": {
+              "target": "Package",
+              "version": "[2.1.35, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Http.Polly": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Qdrant.Client": {
+              "target": "Package",
+              "version": "[1.12.0, )"
+            },
+            "RabbitMQ.Client": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Serilog.Sinks.Console": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "StackExchange.Redis": {
+              "target": "Package",
+              "version": "[2.8.16, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Ingestion/KnowledgeVault.Ingestion.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Ingestion/KnowledgeVault.Ingestion.csproj",
+        "projectName": "KnowledgeVault.Ingestion",
+        "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Ingestion/KnowledgeVault.Ingestion.csproj",
+        "packagesPath": "/Users/ashishrijal/.nuget/packages/",
+        "outputPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Ingestion/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/ashishrijal/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj"
+              },
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj"
+              },
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/KnowledgeVault.Infrastructure.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/KnowledgeVault.Infrastructure.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/tests/KnowledgeVault.Tests/KnowledgeVault.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/tests/KnowledgeVault.Tests/KnowledgeVault.Tests.csproj",
+        "projectName": "KnowledgeVault.Tests",
+        "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/tests/KnowledgeVault.Tests/KnowledgeVault.Tests.csproj",
+        "packagesPath": "/Users/ashishrijal/.nuget/packages/",
+        "outputPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/tests/KnowledgeVault.Tests/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/ashishrijal/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.API/KnowledgeVault.API.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.API/KnowledgeVault.API.csproj"
+              },
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Application/KnowledgeVault.Application.csproj"
+              },
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Core/KnowledgeVault.Core.csproj"
+              },
+              "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/KnowledgeVault.Infrastructure.csproj": {
+                "projectPath": "/Users/ashishrijal/projects/Portfolio Projects/KnowledgeVault/api/src/KnowledgeVault.Infrastructure/KnowledgeVault.Infrastructure.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "FluentAssertions": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.InMemory": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.12.0, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.72, )"
+            },
+            "coverlet.collector": {
+              "target": "Package",
+              "version": "[6.0.2, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.9.2, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.8.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.308/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

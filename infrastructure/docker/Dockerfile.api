@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /app
+COPY src/KnowledgeVault.Core/*.csproj src/KnowledgeVault.Core/
+COPY src/KnowledgeVault.Application/*.csproj src/KnowledgeVault.Application/
+COPY src/KnowledgeVault.Infrastructure/*.csproj src/KnowledgeVault.Infrastructure/
+COPY src/KnowledgeVault.Ingestion/*.csproj src/KnowledgeVault.Ingestion/
+COPY src/KnowledgeVault.API/*.csproj src/KnowledgeVault.API/
+COPY KnowledgeVault.sln .
+RUN dotnet restore
+COPY src/ src/
+RUN dotnet publish src/KnowledgeVault.API/KnowledgeVault.API.csproj -c Release -o /out
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS development
+WORKDIR /app
+COPY --from=build /app .
+ENTRYPOINT ["dotnet", "watch", "run", "--project", "src/KnowledgeVault.API/KnowledgeVault.API.csproj", "--urls", "http://+:5000"]
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS production
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+COPY --from=build /out .
+EXPOSE 5000
+ENTRYPOINT ["dotnet", "KnowledgeVault.API.dll"]

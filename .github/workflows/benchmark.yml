@@ -1,0 +1,43 @@
+name: Performance Benchmark
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start services
+        run: docker compose up -d --build
+        timeout-minutes: 10
+
+      - name: Wait for healthy
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:5001/health && curl -sf http://localhost:8000/health; then
+              echo "Services healthy"
+              break
+            fi
+            sleep 5
+          done
+
+      - name: Run benchmarks
+        run: bash tests/benchmarks/run-benchmarks.sh
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: tests/performance/reports/
+
+      - name: Stop services
+        if: always()
+        run: docker compose down

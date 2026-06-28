@@ -1,0 +1,32 @@
+# Environment
+.env
+
+# .NET
+api/src/**/bin/
+api/src/**/obj/
+*.user
+.vs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+ai-engine/.venv/
+
+# Node
+node_modules/
+dist/
+web-client/node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
