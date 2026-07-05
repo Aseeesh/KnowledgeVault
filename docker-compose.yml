@@ -46,6 +46,29 @@ services:
       retries: 5
       start_period: 30s
 
+  # ─── Ollama model pull (runs once, then exits) ────────────────
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: kv-ollama-pull
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Waiting for Ollama to be ready..."
+        until curl -sf http://ollama:11434/api/tags; do sleep 2; done
+        echo "Pulling llama3.2:1b..."
+        ollama pull llama3.2:1b
+        echo "Pulling nomic-embed-text..."
+        ollama pull nomic-embed-text
+        echo "Models ready."
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - backend
+    restart: "no"
+
   # ─── Python AI Engine ─────────────────────────────────────────
   ai-engine:
     build:
@@ -56,7 +79,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_BASE_URL=http://ollama:11434
       - QDRANT_HOST=qdrant
       - QDRANT_GRPC_PORT=6334
       - QDRANT_HTTP_PORT=6333
@@ -67,10 +90,10 @@ services:
       - LLM_MODEL=llama3.2:1b
     volumes:
       - ./ai-engine/app:/app/app
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       qdrant:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
     networks:
       - backend

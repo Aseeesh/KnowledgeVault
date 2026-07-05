@@ -71,34 +71,67 @@ Every answer is **grounded** in your documents. Citations are **verified** again
 
 ### Prerequisites
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (4GB+ RAM)
-- [Ollama](https://ollama.ai/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) — 8 GB RAM recommended (6 GB minimum)
+- `make` (pre-installed on macOS/Linux; Windows: use Git Bash or WSL)
+- `curl`, `python3` (used by smoke tests and Makefile helpers)
+- `dotnet` SDK 9 (only needed to run C# tests locally outside Docker)
 
-### 1. Pull models
+> **Ollama runs inside Docker** — no local Ollama installation needed. Models are pulled automatically on first start.
+
+---
+
+### Option A — Using Make (recommended)
 
 ```bash
-ollama pull llama3.2:1b
-ollama pull nomic-embed-text
+# 1. Clone and enter the project
+git clone <repo-url>
+cd KnowledgeVault
+
+# 2. First-time setup: creates .env + builds images
+make setup
+
+# 3. Start all 9 services (Ollama models pulled automatically)
+make up
 ```
 
-### 2. Start everything
+That's it. `make up` blocks until the `ollama-pull` service finishes downloading `llama3.2:1b` and `nomic-embed-text`, then prints the service URLs.
+
+---
+
+### Option B — Using Docker Compose directly
 
 ```bash
 git clone <repo-url>
 cd KnowledgeVault
 cp .env.example .env
-docker compose up --build
+docker compose up --build -d
+
+# Wait for model pull to finish (takes 2–10 min on first run)
+docker compose logs -f ollama-pull
 ```
 
-### 3. Open the app
+---
 
-| Service | URL |
-|---------|-----|
-| Web Client | http://localhost:5173 |
-| API Swagger | http://localhost:5001/swagger |
-| AI Engine Docs | http://localhost:8000/docs |
-| Qdrant Dashboard | http://localhost:6333/dashboard |
-| RabbitMQ | http://localhost:15672 |
+### Service URLs
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| **Web Client** | http://localhost:5173 | — |
+| **API Swagger** | http://localhost:5001/swagger | — |
+| **AI Engine Docs** | http://localhost:8000/docs | — |
+| **Qdrant Dashboard** | http://localhost:6333/dashboard | — |
+| **RabbitMQ UI** | http://localhost:15672 | `kv_user` / `KvRabbit2024!` |
+| **Ollama** | http://localhost:11434 | — |
+
+---
+
+### Verify everything works
+
+```bash
+make smoke
+```
+
+This checks health endpoints on all services, lists loaded Ollama models, and sends a test chat message end-to-end.
 
 <br/>
 
@@ -246,21 +279,83 @@ Benchmarked on local Docker (MacOS, 8GB RAM, CPU-only Ollama):
 
 ## Testing
 
+### Run all tests
+
+```bash
+make test           # C# + Python (runs locally / inside containers)
+make test-security  # Security suite (requires services to be running)
+make eval           # AI quality evaluation against golden dataset
+make bench          # Performance benchmarks
+```
+
+### Individual suites
+
 ```bash
 # C# unit + integration tests (35 tests)
-cd api && dotnet test
+cd api && dotnet test --logger "console;verbosity=normal"
 
-# Python AI engine tests (46 tests)
-docker exec kv-ai-engine python -m pytest tests/ -v
+# Python AI engine tests (46 tests, inside container)
+docker exec kv-ai-engine python -m pytest tests/ -v --tb=short
 
-# Security tests (16 tests)
+# Security tests — runs against live services (make sure 'make up' first)
 bash tests/security/security-test.sh
 
 # Performance benchmarks
 bash tests/benchmarks/run-benchmarks.sh
 
-# AI quality evaluation (5 golden dataset cases)
-curl -X POST http://localhost:8000/eval/run
+# AI quality evaluation (golden dataset — 5 cases)
+curl -s -X POST http://localhost:8000/eval/run | python3 -m json.tool
+```
+
+### Manual end-to-end test
+
+```bash
+# 1. Upload a document
+curl -X POST http://localhost:5001/api/v1/documents/upload \
+  -H "X-Tenant-Id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" \
+  -F "file=@your-document.txt" \
+  -F "title=My Document"
+
+# 2. Wait for indexing (check status)
+curl http://localhost:5001/api/v1/documents \
+  -H "X-Tenant-Id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+
+# 3. Ask a question
+curl -X POST http://localhost:5001/api/v1/chat/completions \
+  -H "X-Tenant-Id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Summarize the key points from my document"}'
+```
+
+<br/>
+
+## Makefile Reference
+
+```
+make setup          # First-time setup (copy .env, build images)
+make up             # Start all services + pull Ollama models
+make up-build       # Rebuild images and start
+make down           # Stop all services
+make restart        # Restart all services
+make status         # Show container health status
+make logs           # Tail all logs
+make logs-api       # Tail API logs only
+make logs-ai        # Tail AI engine logs only
+make smoke          # Quick end-to-end health check
+make test           # Run C# + Python tests
+make test-api       # C# tests only (xUnit)
+make test-ai        # Python tests only (pytest)
+make test-security  # Security test suite
+make bench          # Performance benchmarks
+make eval           # AI quality evaluation
+make pull-models    # Manually pull Ollama models
+make list-models    # List loaded Ollama models
+make shell-api      # Bash shell in API container
+make shell-ai       # Bash shell in AI engine container
+make shell-db       # psql in PostgreSQL container
+make shell-redis    # redis-cli
+make clean          # Remove containers + images (keep data)
+make nuke           # Remove everything including volumes
 ```
 
 <br/>
