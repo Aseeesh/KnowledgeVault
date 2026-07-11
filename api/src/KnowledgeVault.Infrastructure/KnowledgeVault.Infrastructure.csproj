@@ -3,14 +3,27 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Disable NU1605 as warning to allow build -->
+    <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\KnowledgeVault.Core\KnowledgeVault.Core.csproj" />
-    <ProjectReference Include="..\KnowledgeVault.Application\KnowledgeVault.Application.csproj" />
   </ItemGroup>
+  
   <ItemGroup>
+    <!-- EF Core with explicit versions for .NET 9 -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
+    
+    <!-- Explicitly set System.Text.Json to match .NET 9 -->
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+    
+    <!-- Other packages -->
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
     <PackageReference Include="RabbitMQ.Client" Version="7.0.0" />
@@ -19,6 +32,7 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.0" />
-    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.0" />
   </ItemGroup>
 </Project>

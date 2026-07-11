@@ -4,13 +4,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\KnowledgeVault.Core\KnowledgeVault.Core.csproj" />
     <ProjectReference Include="..\KnowledgeVault.Application\KnowledgeVault.Application.csproj" />
     <ProjectReference Include="..\KnowledgeVault.Infrastructure\KnowledgeVault.Infrastructure.csproj" />
     <ProjectReference Include="..\KnowledgeVault.Ingestion\KnowledgeVault.Ingestion.csproj" />
   </ItemGroup>
+  
   <ItemGroup>
+    <!-- Add this - needed for EF Core tools -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />

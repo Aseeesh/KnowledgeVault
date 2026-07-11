@@ -3,71 +3,53 @@ using KnowledgeVault.Core.Interfaces.Repositories;
 
 namespace KnowledgeVault.API.Middleware;
 
-public class TenantMiddleware(RequestDelegate next)
+public class TenantMiddleware
 {
+    private readonly RequestDelegate _next;
+    private readonly ILogger<TenantMiddleware> _logger;
+
+    public TenantMiddleware(RequestDelegate next, ILogger<TenantMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
     public async Task InvokeAsync(HttpContext context, ITenantRepository tenantRepo, TenantContext tenantContext)
     {
-        if (context.Request.Path.StartsWithSegments("/health") ||
-            context.Request.Path.StartsWithSegments("/swagger"))
-        {
-            await next(context);
-            return;
-        }
+        // Try to get tenant from header
+        var tenantIdHeader = context.Request.Headers["X-Tenant-Id"].FirstOrDefault();
+        var apiKeyHeader = context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
 
-        // Try X-Tenant-Id header first
-        if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantIdHeader) &&
-            Guid.TryParse(tenantIdHeader, out var tenantId))
+        Guid? tenantId = null;
+
+        // Try header first
+        if (!string.IsNullOrEmpty(tenantIdHeader) && Guid.TryParse(tenantIdHeader, out var headerTenantId))
         {
-            var tenant = await tenantRepo.GetByIdAsync(tenantId);
-            if (tenant is not null && tenant.IsActive)
+            tenantId = headerTenantId;
+        }
+        // Then try API key
+        else if (!string.IsNullOrEmpty(apiKeyHeader))
+        {
+            var tenant = await tenantRepo.GetByApiKeyAsync(apiKeyHeader);
+            if (tenant != null)
             {
-                tenantContext.TenantId = tenant.Id;
-                tenantContext.TenantSlug = tenant.Slug;
-                tenantContext.Tenant = tenant;
-                await next(context);
-                return;
+                tenantId = tenant.Id;
             }
         }
 
-        // Try API key from Authorization header
-        var authHeader = context.Request.Headers.Authorization.ToString();
-        if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        // If no tenant found, use default tenant for development
+        if (!tenantId.HasValue)
         {
-            var apiKey = authHeader["Bearer ".Length..].Trim();
-            var tenant = await tenantRepo.GetByApiKeyAsync(apiKey);
-            if (tenant is not null)
-            {
-                tenantContext.TenantId = tenant.Id;
-                tenantContext.TenantSlug = tenant.Slug;
-                tenantContext.Tenant = tenant;
-                await next(context);
-                return;
-            }
+            // For development, use a default tenant
+            var defaultTenantId = Guid.Parse("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
+            tenantId = defaultTenantId;
+            _logger.LogWarning("No tenant header found, using default tenant: {TenantId}", defaultTenantId);
         }
 
-        // Try tenant ID from route
-        if (context.Request.RouteValues.TryGetValue("tenantId", out var routeTenantId) &&
-            Guid.TryParse(routeTenantId?.ToString(), out var routeId))
-        {
-            var tenant = await tenantRepo.GetByIdAsync(routeId);
-            if (tenant is not null && tenant.IsActive)
-            {
-                tenantContext.TenantId = tenant.Id;
-                tenantContext.TenantSlug = tenant.Slug;
-                tenantContext.Tenant = tenant;
-                await next(context);
-                return;
-            }
-        }
+        // Set tenant context
+        tenantContext.TenantId = tenantId.Value;
+        context.Items["TenantId"] = tenantId.Value.ToString();
 
-        // For API endpoints that require tenant, return 401
-        if (context.Request.Path.StartsWithSegments("/api"))
-        {
-            context.Response.StatusCode = 401;
-            await context.Response.WriteAsJsonAsync(new { error = "Tenant identification required. Provide X-Tenant-Id header or Bearer API key." });
-            return;
-        }
-
-        await next(context);
+        await _next(context);
     }
 }

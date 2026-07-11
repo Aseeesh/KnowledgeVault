@@ -1,0 +1,17 @@
+{
+  "venv": "venv",
+  "venvPath": ".",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Darwin",
+  "typeCheckingMode": "basic",
+  "useLibraryCodeForTypes": true,
+  "reportMissingImports": true,
+  "reportMissingModuleSource": false,
+  "stubPath": "typings",
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.venv",
+    "venv"
+  ]
+}

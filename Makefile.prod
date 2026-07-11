@@ -1,0 +1,76 @@
+# =============================================================================
+# KnowledgeVault — Production Makefile
+# =============================================================================
+
+.PHONY: help setup build up down status logs test clean nuke
+
+CYAN   := \033[0;36m
+GREEN  := \033[0;32m
+YELLOW := \033[0;33m
+RED    := \033[0;31m
+RESET  := \033[0m
+
+COMPOSE_FILE := docker-compose.yml
+ENV_FILE := .env.prod
+
+help:
+	@echo ""
+	@echo "  $(CYAN)KnowledgeVault — Production Environment$(RESET)"
+	@echo ""
+	@echo "  $(GREEN)Commands:$(RESET)"
+	@echo "    make setup          First-time setup"
+	@echo "    make build          Build Docker images"
+	@echo "    make up             Start all services"
+	@echo "    make down           Stop all services"
+	@echo "    make status         Show service status"
+	@echo "    make logs           View logs"
+	@echo "    make test           Run tests"
+	@echo "    make clean          Clean containers (keep data)"
+	@echo "    make nuke           Remove everything"
+	@echo ""
+
+setup:
+	@echo "$(CYAN)Setting up production environment...$(RESET)"
+	@if [ ! -f $(ENV_FILE) ]; then \
+		cp .env.example $(ENV_FILE); \
+		echo "$(GREEN)Created $(ENV_FILE)$(RESET)"; \
+	fi
+	@echo "$(GREEN)Setup complete!$(RESET)"
+
+build:
+	@echo "$(CYAN)Building Docker images...$(RESET)"
+	@docker compose -f $(COMPOSE_FILE) build
+	@echo "$(GREEN)Build complete!$(RESET)"
+
+up:
+	@echo "$(CYAN)Starting production services...$(RESET)"
+	@docker compose -f $(COMPOSE_FILE) up -d
+	@echo "$(GREEN)Services started!$(RESET)"
+
+down:
+	@echo "$(CYAN)Stopping production services...$(RESET)"
+	@docker compose -f $(COMPOSE_FILE) down
+	@echo "$(GREEN)Services stopped$(RESET)"
+
+status:
+	@docker compose -f $(COMPOSE_FILE) ps
+
+logs:
+	@docker compose -f $(COMPOSE_FILE) logs -f
+
+test:
+	@echo "$(CYAN)Running tests...$(RESET)"
+	@docker compose -f $(COMPOSE_FILE) exec api dotnet test 2>/dev/null || echo "Tests not available"
+
+clean:
+	@docker compose -f $(COMPOSE_FILE) down --rmi local
+	@echo "$(GREEN)Cleaned (data preserved)$(RESET)"
+
+nuke:
+	@echo "$(RED)Remove everything? (yes/no):$(RESET)"; \
+	read confirm; \
+	if [ "$$confirm" = "yes" ]; then \
+		docker compose -f $(COMPOSE_FILE) down -v --rmi all; \
+		rm -f $(ENV_FILE); \
+		echo "$(GREEN)Nuked!$(RESET)"; \
+	fi

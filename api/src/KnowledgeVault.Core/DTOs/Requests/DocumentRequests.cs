@@ -1,4 +1,4 @@
-namespace KnowledgeVault.Core.DTOs.Requests;
+namespace KnowledgeVault.Core.DTOs.Requests; 
 
 public record CreateDocumentRequest(
     string Title,
@@ -12,6 +12,8 @@ public record UpdateDocumentRequest(
     string? SourceUrl = null,
     Dictionary<string, object>? Metadata = null
 );
+
+
 
 public record SearchRequest(
     string Query,

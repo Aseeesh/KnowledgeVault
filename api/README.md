@@ -41,3 +41,35 @@ API available at `http://localhost:5000/swagger`
 | GET | `/api/tenants/{id}/documents/{docId}` | Get document detail |
 | DELETE | `/api/tenants/{id}/documents/{docId}` | Delete document |
 | POST | `/api/tenants/{id}/search` | Proxy search to AI engine |
+
+
+# Run migration
+# IMPORTANT: Run from the Infrastructure project directory
+cd api/src/KnowledgeVault.Infrastructure
+
+# Add migration
+dotnet ef migrations add InitialCreate \
+    --startup-project ../KnowledgeVault.API \
+    --output-dir Migrations \
+    --context AppDbContext
+
+# Update database
+dotnet ef database update \
+    --startup-project ../KnowledgeVault.API \
+    --context AppDbContext
+
+# kill a port
+kill -9 $(lsof -t -i:8080)
+
+
+# Check if AI Engine is running
+curl http://localhost:8000/health
+
+# Check if database exists
+docker exec -it kv-postgres psql -U kv_user -d knowledgevault -c "\dt"
+
+# Check Redis
+docker exec kv-redis redis-cli -a KvRedis2024! ping
+
+# Check Qdrant
+curl http://localhost:6333/healthz

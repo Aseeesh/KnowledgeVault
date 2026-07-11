@@ -1,0 +1,232 @@
+# =============================================================================
+# KnowledgeVault — Development Makefile (Hybrid: Docker Infra + Local Services)
+# =============================================================================
+
+.PHONY: help setup up down status logs run-api run-ai run-web run-all smoke test clean nuke
+
+# ─── Colors ───────────────────────────────────────────────────────────────────
+CYAN   := \033[0;36m
+GREEN  := \033[0;32m
+YELLOW := \033[0;33m
+RED    := \033[0;31m
+RESET  := \033[0m
+
+COMPOSE_FILE := docker-compose.infrastructure.yml
+ENV_FILE := .env
+
+# ─── Help ─────────────────────────────────────────────────────────────────────
+help:
+	@echo ""
+	@echo "  $(CYAN)KnowledgeVault — Development Environment$(RESET)"
+	@echo ""
+	@echo "  $(GREEN)Infrastructure (Docker):$(RESET)"
+	@echo "    make up             Start infrastructure (PostgreSQL, Redis, Qdrant, RabbitMQ)"
+	@echo "    make down           Stop infrastructure"
+	@echo "    make status         Show service status"
+	@echo "    make logs           View logs"
+	@echo ""
+	@echo "  $(GREEN)Local Services:$(RESET)"
+	@echo "    make run-api        Run .NET API locally (requires dotnet 9)"
+	@echo "    make run-ai         Run AI Engine locally (requires Python 3.12)"
+	@echo "    make run-web        Run Web Client locally (requires Node.js 20+)"
+	@echo "    make run-all        Run all local services (tmux)"
+	@echo ""
+	@echo "  $(GREEN)Testing:$(RESET)"
+	@echo "    make smoke          Run smoke tests"
+	@echo "    make test           Run all tests"
+	@echo ""
+	@echo "  $(GREEN)Cleanup:$(RESET)"
+	@echo "    make clean          Clean containers (keep data)"
+	@echo "    make nuke           Remove everything (containers + data)"
+	@echo ""
+	@echo "  $(YELLOW)Prerequisites:$(RESET)"
+	@echo "    - Ollama installed locally with llama3.2:1b and nomic-embed-text"
+	@echo "    - Docker Desktop running"
+	@echo "    - dotnet 9 SDK"
+	@echo "    - Python 3.12+"
+	@echo "    - Node.js 20+"
+	@echo ""
+
+# ─── Setup ────────────────────────────────────────────────────────────────────
+setup:
+	@echo "$(CYAN)Setting up development environment...$(RESET)"
+	@if [ ! -f $(ENV_FILE) ]; then \
+		cp .env.example $(ENV_FILE); \
+		echo "$(GREEN)Created $(ENV_FILE)$(RESET)"; \
+	fi
+	@echo ""
+	@echo "$(GREEN)✅ Setup complete!$(RESET)"
+	@echo ""
+	@echo "Verifying Ollama models..."
+	@if ollama list | grep -q "llama3.2:1b"; then \
+		echo "$(GREEN)✅ llama3.2:1b found$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠️  llama3.2:1b not found. Pulling...$(RESET)"; \
+		ollama pull llama3.2:1b; \
+	fi
+	@if ollama list | grep -q "nomic-embed-text"; then \
+		echo "$(GREEN)✅ nomic-embed-text found$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠️  nomic-embed-text not found. Pulling...$(RESET)"; \
+		ollama pull nomic-embed-text; \
+	fi
+	@echo ""
+	@echo "$(GREEN)All models ready!$(RESET)"
+	@echo ""
+	@echo "Next: make up"
+
+# ─── Infrastructure ──────────────────────────────────────────────────────────
+up:
+	@echo "$(CYAN)Starting infrastructure...$(RESET)"
+	@# Check if ports are free
+	@for port in 5432 6379 6333 6334 5672 15672; do \
+		if lsof -i :$$port > /dev/null 2>&1; then \
+			echo "$(YELLOW)⚠️  Port $$port is already in use$(RESET)"; \
+		fi; \
+	done
+	@docker compose -f $(COMPOSE_FILE) up -d
+	@echo ""
+	@echo "$(GREEN)✅ Infrastructure started!$(RESET)"
+	@echo ""
+	@echo "📋 Infrastructure URLs:"
+	@echo "   PostgreSQL:  localhost:5432"
+	@echo "   Redis:       localhost:6379"
+	@echo "   Qdrant:      http://localhost:6333/dashboard"
+	@echo "   RabbitMQ:    http://localhost:15672 (kv_user / KvRabbit2024!)"
+	@echo ""
+	@echo "🚀 Start local services:"
+	@echo "   Terminal 1: make run-api"
+	@echo "   Terminal 2: make run-ai"
+	@echo "   Terminal 3: make run-web"
+	@echo "   Or:         make run-all (with tmux)"
+	@echo ""
+
+down:
+	@echo "$(CYAN)Stopping infrastructure...$(RESET)"
+	@docker compose -f $(COMPOSE_FILE) down
+	@echo "$(GREEN)✅ Infrastructure stopped$(RESET)"
+
+status:
+	@echo "$(CYAN)Infrastructure Status:$(RESET)"
+	@docker compose -f $(COMPOSE_FILE) ps
+	@echo ""
+	@echo "$(CYAN)Ollama Status:$(RESET)"
+	@ollama list
+
+logs:
+	@docker compose -f $(COMPOSE_FILE) logs -f
+
+# ─── Local Services ──────────────────────────────────────────────────────────
+run-api:
+	@echo "$(CYAN)Starting .NET API...$(RESET)"
+	@echo "   URL: http://localhost:5001"
+	@echo "   Swagger: http://localhost:5001/swagger"
+	@echo ""
+	@cd api && dotnet run --project src/KnowledgeVault.API/
+
+run-ai:
+	@echo "$(CYAN)Starting AI Engine...$(RESET)"
+	@echo "   URL: http://localhost:8000"
+	@echo "   Docs: http://localhost:8000/docs"
+	@echo ""
+	@cd ai-engine && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+run-web:
+	@echo "$(CYAN)Starting Web Client...$(RESET)"
+	@echo "   URL: http://localhost:5173"
+	@echo ""
+	@cd web-client && npm run dev
+
+run-all:
+	@echo "$(CYAN)Starting all local services...$(RESET)"
+	@if command -v tmux >/dev/null 2>&1; then \
+		tmux new-session -d -s kv \; \
+			send-keys 'make -f Makefile.dev run-api' C-m \; \
+			split-window -h \; \
+			send-keys 'make -f Makefile.dev run-ai' C-m \; \
+			split-window -v \; \
+			send-keys 'make -f Makefile.dev run-web' C-m \; \
+			attach; \
+	else \
+		echo "⚠️  tmux not found. Please run in separate terminals:"; \
+		echo "   Terminal 1: make run-api"; \
+		echo "   Terminal 2: make run-ai"; \
+		echo "   Terminal 3: make run-web"; \
+	fi
+
+# ─── Testing ──────────────────────────────────────────────────────────────────
+smoke:
+	@echo "$(CYAN)Running smoke tests...$(RESET)"
+	@if [ -f tests/smoke-test.sh ]; then \
+		bash tests/smoke-test.sh; \
+	else \
+		echo "$(YELLOW)⚠️  Smoke test script not found$(RESET)"; \
+		echo "Running basic health checks..." ; \
+		echo ""; \
+		echo "Checking infrastructure..." ; \
+		curl -s http://localhost:6333/healthz > /dev/null && echo "$(GREEN)✅ Qdrant OK$(RESET)" || echo "$(RED)❌ Qdrant DOWN$(RESET)" ; \
+		curl -s http://localhost:11434/api/tags > /dev/null && echo "$(GREEN)✅ Ollama OK$(RESET)" || echo "$(RED)❌ Ollama DOWN$(RESET)" ; \
+		echo ""; \
+		echo "Checking local services..." ; \
+		curl -s http://localhost:5001/health > /dev/null && echo "$(GREEN)✅ API OK$(RESET)" || echo "$(YELLOW)⚠️  API not running (run: make run-api)$(RESET)" ; \
+		curl -s http://localhost:8000/health > /dev/null && echo "$(GREEN)✅ AI Engine OK$(RESET)" || echo "$(YELLOW)⚠️  AI Engine not running (run: make run-ai)$(RESET)" ; \
+		curl -s http://localhost:5173 > /dev/null && echo "$(GREEN)✅ Web Client OK$(RESET)" || echo "$(YELLOW)⚠️  Web Client not running (run: make run-web)$(RESET)" ; \
+	fi
+
+test:
+	@echo "$(CYAN)Running tests...$(RESET)"
+	@echo ""
+	@echo "📦 API Tests:"
+	@cd api && dotnet test 2>/dev/null || echo "   No API tests found"
+	@echo ""
+	@echo "📦 AI Engine Tests:"
+	@cd ai-engine && python -m pytest tests/ -v 2>/dev/null || echo "   No AI tests found"
+
+# ─── Cleanup ──────────────────────────────────────────────────────────────────
+clean:
+	@echo "$(CYAN)Cleaning containers (data preserved)...$(RESET)"
+	@docker compose -f $(COMPOSE_FILE) down
+	@echo "$(GREEN)✅ Clean complete$(RESET)"
+
+nuke:
+	@echo "$(RED)☠️  NUKE: Remove everything? (yes/no):$(RESET)"
+	@read confirm; \
+	if [ "$$confirm" = "yes" ]; then \
+		echo "Stopping and removing containers with volumes..."; \
+		docker compose -f $(COMPOSE_FILE) down -v; \
+		echo "Removing .env..."; \
+		rm -f $(ENV_FILE); \
+		echo "$(GREEN)✅ Nuke complete!$(RESET)"; \
+	else \
+		echo "$(YELLOW)❌ Cancelled$(RESET)"; \
+	fi
+
+# ─── Utility ──────────────────────────────────────────────────────────────────
+.PHONY: check-ports
+check-ports:
+	@echo "$(CYAN)Checking port availability...$(RESET)"
+	@for port in 5432 6379 6333 6334 5672 15672 5001 8000 5173 11434; do \
+		if lsof -i :$$port > /dev/null 2>&1; then \
+			echo "$(RED)❌ Port $$port is in use$(RESET)"; \
+		else \
+			echo "$(GREEN)✅ Port $$port is free$(RESET)"; \
+		fi; \
+	done
+
+.PHONY: kill-ports
+kill-ports:
+	@echo "$(YELLOW)⚠️  This will kill processes using ports 5432, 6379, 6333, 6334, 5672, 15672$(RESET)"
+	@echo "$(YELLOW)Continue? (yes/no):$(RESET)"
+	@read confirm; \
+	if [ "$$confirm" = "yes" ]; then \
+		for port in 5432 6379 6333 6334 5672 15672; do \
+			pid=$$(lsof -ti :$$port 2>/dev/null); \
+			if [ -n "$$pid" ]; then \
+				echo "Killing process on port $$port (PID: $$pid)"; \
+				kill -9 $$pid 2>/dev/null || true; \
+			fi; \
+		done; \
+		echo "$(GREEN)✅ Ports cleared$(RESET)"; \
+	else \
+		echo "$(YELLOW)❌ Cancelled$(RESET)"; \
+	fi

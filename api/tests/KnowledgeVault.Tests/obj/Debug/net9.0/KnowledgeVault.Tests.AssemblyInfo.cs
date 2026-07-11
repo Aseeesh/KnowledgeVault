@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KnowledgeVault.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f3d75182131490d4ced6ad98c6635370446749c2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+370b185877307a6df632829b4d05a53b048c31ed")]
 [assembly: System.Reflection.AssemblyProductAttribute("KnowledgeVault.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KnowledgeVault.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,7 +1,7 @@
 using System.Text;
-using System.Text.Json;
+using System.Text.Json; 
 using KnowledgeVault.Core.Interfaces.Services;
-using Microsoft.Extensions.Configuration;
+using KnowledgeVault.Infrastructure.Configuration;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
@@ -20,23 +20,32 @@ public class RabbitMqService : IMessageQueueService, IAsyncDisposable
         _logger = logger;
     }
 
-    public static async Task<RabbitMqService> CreateAsync(IConfiguration config, ILogger<RabbitMqService> logger)
+    public static async Task<RabbitMqService> CreateAsync(AppConfig.RabbitMqConfig config, ILogger<RabbitMqService> logger)
     {
         var factory = new ConnectionFactory
         {
-            HostName = config["RabbitMQ:Host"] ?? "localhost",
-            UserName = config["RabbitMQ:Username"] ?? "kv_user",
-            Password = config["RabbitMQ:Password"] ?? "KvRabbit2024!"
+            HostName = config.Host,
+            UserName = config.Username,
+            Password = config.Password,
+            Port = config.Port
         };
 
-        var connection = await factory.CreateConnectionAsync();
-        var channel = await connection.CreateChannelAsync();
+        try
+        {
+            var connection = await factory.CreateConnectionAsync();
+            var channel = await connection.CreateChannelAsync();
 
-        await channel.QueueDeclareAsync("document.ingest", durable: true, exclusive: false, autoDelete: false);
-        await channel.QueueDeclareAsync("document.ingest.dlq", durable: true, exclusive: false, autoDelete: false);
+            await channel.QueueDeclareAsync("document.ingest", durable: true, exclusive: false, autoDelete: false);
+            await channel.QueueDeclareAsync("document.ingest.dlq", durable: true, exclusive: false, autoDelete: false);
 
-        logger.LogInformation("RabbitMQ connected to {Host}", factory.HostName);
-        return new RabbitMqService(connection, channel, logger);
+            logger.LogInformation("RabbitMQ connected to {Host}:{Port}", config.Host, config.Port);
+            return new RabbitMqService(connection, channel, logger);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to connect to RabbitMQ at {Host}:{Port}", config.Host, config.Port);
+            throw;
+        }
     }
 
     public async Task PublishAsync<T>(string queueName, T message, CancellationToken ct = default)

@@ -30,3 +30,13 @@ Thumbs.db
 
 # Docker
 *.log
+
+.local_state.json
+.claude/
+/.codebase-memory-cache/
+.context-engine-port
+.context-engine.log
+.mcp.json
+
+/ai-engine/.venv/*
+ai-engine/venv/*
